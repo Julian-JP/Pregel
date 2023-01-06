@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 public class Pregel {
     public static <NV, EV, M> Graph<NV, EV> apply(Graph<NV, EV> graph, M initialMessage, int maxSupersteps, BiFunction<NV, List<M>, NV> vertexFunction, Function<EdgeTriplet<NV, EV>, M> sendMsg) {
+        long startTime = System.currentTimeMillis();
         long countMessages = 0;
         List<ExtendedNode<NV, EV>> activeNodes = graph.toExtendedNodeStream().collect(Collectors.toList());
         HashSet<ExtendedNode<NV, EV>> inactiveNodes = new HashSet<>();
@@ -61,7 +62,8 @@ public class Pregel {
             }
         }
 
-        System.out.println("Pregel finished with " + countMessages + " messages");
+        long timeElapsed = System.currentTimeMillis() - startTime;
+        System.out.println("Pregel finished with " + countMessages + " messages in " + timeElapsed + "ms");
         return graph;
     }
 }

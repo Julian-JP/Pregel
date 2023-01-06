@@ -14,19 +14,19 @@ import java.util.stream.Collectors;
 
 public class Main {
     public static void main(String[] args) {
-        File facebookCombined = new File("/home/julian/Downloads/facebook_combined.txt");
+        File facebookCombined = new File("/run/media/julian/CBE7-42BF/Seminar/facebook_combined.txt");
         int maxFacebook = 4039;
         boolean addOppositeFacebook = true;
 
-        File emailEnron = new File("/home/julian/Downloads/Email-Enron.txt");
+        File emailEnron = new File("/run/media/julian/CBE7-42BF/Seminar/Email-Enron.txt");
         int maxEnron = 36692;
         boolean addOppositeEnron = false;
 
-        File roadNWPA = new File("/home/julian/Downloads/roadNet-PA.txt");
+        File roadNWPA = new File("/run/media/julian/CBE7-42BF/Seminar/roadNet-PA.txt");
         int maxRoadNWPA = 1088092;
         boolean addOppositeRoadNWPA = false;
 
-        File roadNWCA = new File("/home/julian/Downloads/roadNet-CA.txt");
+        File roadNWCA = new File("/run/media/julian/CBE7-42BF/Seminar/roadNet-CA.txt");
         int maxRoadNWCA = 1965206;
         boolean addOppositeRoadNWCA = false;
 
