@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 
 public class Main {
     public static void main(String[] args) {
+        //Graphs from https://snap.stanford.edu/data/
         File facebookCombined = new File("/run/media/julian/CBE7-42BF/Seminar/facebook_combined.txt");
         int maxFacebook = 4039;
         boolean addOppositeFacebook = true;
