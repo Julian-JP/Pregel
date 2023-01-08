@@ -1,7 +1,5 @@
 package Pregel;
 
-import java.util.List;
-
 public class Node<NV> {
     private NV value;
     int id;

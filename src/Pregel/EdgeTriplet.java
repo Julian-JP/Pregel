@@ -1,10 +1,10 @@
 package Pregel;
 
 public class EdgeTriplet<NV, EV> {
-    final Node<NV> from, to;
+    final ExtendedNode<NV, EV> from, to;
     final Edge<EV> edge;
 
-    public EdgeTriplet(Node<NV> from, Node<NV> to, Edge<EV> edge) {
+    public EdgeTriplet(ExtendedNode<NV, EV> from, ExtendedNode<NV, EV> to, Edge<EV> edge) {
         this.from = from;
         this.to = to;
         this.edge = edge;
@@ -19,14 +19,22 @@ public class EdgeTriplet<NV, EV> {
     }
 
     public int srcId() {
-        return from.id;
+        return from.node.id;
     }
 
     public int dstId() {
-        return to.id;
+        return to.node.id;
     }
 
     public EV edgeAttr() {
         return edge.getValue();
+    }
+
+    public int srcNodeDegree() {
+        return from.getNeighbors().size();
+    }
+
+    public int dstNodeDegree() {
+        return to.getNeighbors().size();
     }
 }

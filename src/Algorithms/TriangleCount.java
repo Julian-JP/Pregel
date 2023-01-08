@@ -13,14 +13,14 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class TriangleCount {
-    public static <NV, EV> long count(Graph<NV, EV> graph) {
+    public static <NV, EV> long apply(Graph<NV, EV> graph) {
 
         Graph<List<Integer[]>, Double> triangleGraph = graph.mapTo(x -> new ArrayList<>(), x -> 0.0);
 
-        Graph<List<Integer[]>, Double> resTriangle = Pregel.apply(triangleGraph, new ArrayList<>(), 2, vertexFunctionTriangle, sendMsgTriangle);
+        Graph<List<Integer[]>, Double> resTriangle = Pregel.apply(triangleGraph, 2, vertexFunctionTriangle, sendMsgTriangle);
 
 
-        return resTriangle.toNodeStream().map(x->x.getValue()).map(List::size).reduce(0, Integer::sum) / 3;
+        return resTriangle.toNodeStream().map(x -> x.getValue()).map(List::size).reduce(0, Integer::sum) / 3;
     }
 
     private static BiFunction<List<Integer[]>, List<List<Integer[]>>, List<Integer[]>> vertexFunctionTriangle = (vertexVal, messages) -> {
@@ -45,18 +45,15 @@ public class TriangleCount {
             return messages.stream().flatMap(Collection::stream).collect(Collectors.toList());
         }
     };
-    private static Function<EdgeTriplet<List<Integer[]>, Double>, List<Integer[]>> sendMsgTriangle = new Function<>() {
-        @Override
-        public List<Integer[]> apply(EdgeTriplet<List<Integer[]>, Double> triplet) {
-            if (triplet.srcAttr().isEmpty()) {
-                Integer[] temp = {triplet.srcId(), triplet.dstId()};
+    private static Function<EdgeTriplet<List<Integer[]>, Double>, List<Integer[]>> sendMsgTriangle = (triplet) -> {
+        if (triplet.srcAttr().isEmpty()) {
+            Integer[] temp = {triplet.srcId(), triplet.dstId()};
 
-                ArrayList<Integer[]> ret = new ArrayList<>(1);
-                ret.add(temp);
-                return ret;
-            } else {
-                return triplet.srcAttr();
-            }
+            ArrayList<Integer[]> ret = new ArrayList<>(1);
+            ret.add(temp);
+            return ret;
+        } else {
+            return triplet.srcAttr();
         }
     };
 }

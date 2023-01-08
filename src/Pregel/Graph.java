@@ -22,11 +22,11 @@ public class Graph<NV, EV> {
         }
 
 
-        for (int i = 0; i < edges.size(); ++i) {
-            if (edges.get(i).sourceId > nodes.size() || edges.get(i).dstId > nodes.size()) {
-                throw new ArrayIndexOutOfBoundsException("Unknown id in edges list: " + edges.get(i).sourceId + "->" + edges.get(i).dstId);
+        for (Edge<EV> edge : edges) {
+            if (edge.sourceId > nodes.size() || edge.dstId > nodes.size()) {
+                throw new ArrayIndexOutOfBoundsException("Unknown id in edges list: " + edge.sourceId + "->" + edge.dstId);
             }
-            this.nodes[edges.get(i).sourceId].addEdge(edges.get(i), this.nodes[edges.get(i).dstId]);
+            this.nodes[edge.sourceId].addEdge(edge, this.nodes[edge.dstId]);
         }
     }
 
@@ -36,7 +36,7 @@ public class Graph<NV, EV> {
         HashMap<Integer, Integer> mapping = new HashMap<>(verticesCount);
         int maxKey = 0;
 
-        BufferedReader reader = null;
+        BufferedReader reader;
         reader = new BufferedReader(new FileReader(edgeFile));
         String line;
         while ((line = reader.readLine()) != null) {
@@ -47,12 +47,12 @@ public class Graph<NV, EV> {
             Integer from = mapping.putIfAbsent(fromTmp, maxKey);
             if (from == null) {
                 from = maxKey;
-                this.nodes[from] = new ExtendedNode<NV, EV>(new Node<NV>(defaultVertexValue, maxKey++));
+                this.nodes[from] = new ExtendedNode<NV, EV>(new Node<>(defaultVertexValue, maxKey++));
             }
             Integer to = mapping.putIfAbsent(toTmp, maxKey);
             if (to == null) {
                 to = maxKey;
-                this.nodes[to] = new ExtendedNode<NV, EV>(new Node<NV>(defaultVertexValue, maxKey++));
+                this.nodes[to] = new ExtendedNode<NV, EV>(new Node<>(defaultVertexValue, maxKey++));
             }
 
             if (this.nodes[to] == null || this.nodes[from] == null) {
@@ -72,7 +72,7 @@ public class Graph<NV, EV> {
     }
 
     public Stream<EdgeTriplet<NV, EV>> toEdgeStream() {
-        return Arrays.stream(nodes).flatMap(lst -> lst.getNeighbors().stream().map(ec -> new EdgeTriplet<NV, EV>(lst.node, ec.to.node, ec.edge)));
+        return Arrays.stream(nodes).flatMap(lst -> lst.getNeighbors().stream().map(ec -> new EdgeTriplet<NV, EV>(lst, ec.to, ec.edge)));
     }
 
     public Stream<Node<NV>> toNodeStream() {
@@ -92,5 +92,9 @@ public class Graph<NV, EV> {
             }
         }
         return new Graph<NV2, EV2>(newNodes);
+    }
+
+    public long countNodes() {
+        return nodes.length;
     }
 }
