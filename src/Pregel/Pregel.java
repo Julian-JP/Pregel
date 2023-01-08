@@ -53,13 +53,9 @@ public class Pregel {
             }
 
             activeNodes = activeNodesNew;
-            if (activeNodes.isEmpty()) {
-                break;
-            }
-
+            if (activeNodes.isEmpty()) break;
 
             activeNodes = activeNodes.stream().parallel().peek(x -> {x.setValue(vertexFunction.apply(x.getValue(), messages.get(x))); }).collect(Collectors.toList());
-
         }
 
         long timeElapsed = System.currentTimeMillis() - startTime;

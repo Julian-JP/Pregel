@@ -84,11 +84,11 @@ public class Graph<NV, EV> {
     }
 
     public <NV2, EV2> Graph<NV2, EV2> mapTo(Function<NV, NV2> mapNodes, Function<EV, EV2> mapEdges) {
-        ExtendedNode<NV2, EV2>[] newNodes = Arrays.stream(this.nodes).map(x -> new ExtendedNode<NV2, EV2>(new Node<NV2>(mapNodes.apply(x.getValue()), x.node.id), new ArrayList<>())).toArray(size -> new ExtendedNode[size]);
+        ExtendedNode<NV2, EV2>[] newNodes = Arrays.stream(this.nodes).map(x -> new ExtendedNode<NV2, EV2>(new Node<>(mapNodes.apply(x.getValue()), x.node.id), new ArrayList<>())).toArray(size -> new ExtendedNode[size]);
         for (int i = 0; i < this.nodes.length; i++) {
             for (int j = 0; j < this.nodes[i].getNeighbors().size(); j++) {
                 Edge<EV> cur = this.nodes[i].getNeighbors().get(j).edge;
-                newNodes[i].addEdge(new Edge<EV2>(mapEdges.apply(cur.getValue()), cur.sourceId, cur.dstId), newNodes[cur.dstId]);
+                newNodes[i].addEdge(new Edge<>(mapEdges.apply(cur.getValue()), cur.sourceId, cur.dstId), newNodes[cur.dstId]);
             }
         }
         return new Graph<NV2, EV2>(newNodes);
