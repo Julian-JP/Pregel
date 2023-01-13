@@ -55,16 +55,46 @@ public class Graph<NV, EV> {
                 this.nodes[to] = new ExtendedNode<NV, EV>(new Node<>(defaultVertexValue, maxKey++));
             }
 
-            if (this.nodes[to] == null || this.nodes[from] == null) {
-                return;
-            }
-
             this.nodes[from].addEdge(new Edge<>(defaultEdgeValue, from, to), this.nodes[to]);
 
             if (addOppositeEdges) {
                 this.nodes[to].addEdge(new Edge<>(defaultEdgeValue, to, from), this.nodes[from]);
             }
         }
+    }
+
+    public static Graph<Integer, Boolean> computeSimpleGraph(File edgeFile, String separator, int verticesCount, boolean addOppositeEdges) throws IOException {
+        ExtendedNode<Integer, Boolean>[] nodes = new ExtendedNode[verticesCount];
+
+        HashMap<Integer, Integer> mapping = new HashMap<>(verticesCount);
+        int maxKey = 0;
+
+        BufferedReader reader;
+        reader = new BufferedReader(new FileReader(edgeFile));
+        String line;
+        while ((line = reader.readLine()) != null) {
+            String[] split = line.split(separator);
+            Integer fromTmp = Integer.valueOf(split[0]);
+            Integer toTmp = Integer.valueOf(split[1]);
+
+            Integer from = mapping.putIfAbsent(fromTmp, maxKey);
+            if (from == null) {
+                from = maxKey;
+                nodes[from] = new ExtendedNode<Integer, Boolean>(new Node<>(fromTmp, maxKey++));
+            }
+            Integer to = mapping.putIfAbsent(toTmp, maxKey);
+            if (to == null) {
+                to = maxKey;
+                nodes[to] = new ExtendedNode<Integer, Boolean>(new Node<>(toTmp, maxKey++));
+            }
+            nodes[from].addEdge(new Edge<>(true, from, to), nodes[to]);
+
+            if (addOppositeEdges) {
+                nodes[to].addEdge(new Edge<>(true, to, from), nodes[from]);
+            }
+        }
+
+        return new Graph<Integer, Boolean>(nodes);
     }
 
     private Graph(ExtendedNode<NV, EV>[] nodes) {
@@ -79,7 +109,7 @@ public class Graph<NV, EV> {
         return Arrays.stream(nodes).map(extNode -> extNode.node);
     }
 
-    Stream<ExtendedNode<NV, EV>> toExtendedNodeStream() {
+    public Stream<ExtendedNode<NV, EV>> toExtendedNodeStream() {
         return Arrays.stream(nodes);
     }
 
@@ -96,5 +126,40 @@ public class Graph<NV, EV> {
 
     public long countNodes() {
         return nodes.length;
+    }
+
+    public void removeSelfEdges() {
+        for (ExtendedNode<NV, EV> node : nodes) {
+            node.getNeighbors().removeIf(x -> x.edge.dstId == x.edge.sourceId);
+        }
+    }
+
+    //For undirected graphs where every edge is 2times in edges (one for each direction)
+    public Graph<NV, EV> sampleEdgesBidirectional(double s) {
+        double dAVG = toEdgeStream().count() / (double) nodes.length;
+
+        for (ExtendedNode<NV, EV> node : nodes) {
+            for (int j = 0; j < node.getNeighbors().size(); j++) {
+                final ExtendedNode<NV, EV> from = node;
+                final ExtendedNode<NV, EV> to = node.getNeighbors().get(j).to;
+
+                //Prevents edges from been tested twice since for undirected graph every edge
+                //is twice in the graph: one time for x->y one time for y->x
+                if (from.hashCode() < to.hashCode()) continue;
+
+                double degreeIn = from.getNeighbors().size();
+                double degreeOut = to.getNeighbors().size();
+                double sparsifier = (dAVG * s) / Math.min(degreeIn, degreeOut);
+                if (Math.random() > sparsifier) {
+                    //In the case of x->x we just need to remove one edge
+                    if (from != to) {
+                        to.getNeighbors().removeIf(x -> x.to == from);
+                    }
+                    from.getNeighbors().remove(j);
+                    j--;
+                }
+            }
+        }
+        return this;
     }
 }

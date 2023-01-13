@@ -16,4 +16,6 @@ public class Node<NV> {
     public void setValue(NV value) {
         this.value = value;
     }
+
+    public int getId() {return id;}
 }
