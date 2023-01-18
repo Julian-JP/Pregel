@@ -24,6 +24,7 @@ public class SpearmanCorrelation {
 
         if (sum == 0) return 0.0;
 
+        //Working in log space since the values are too big
         return Math.exp(Math.log(6) + Math.log(sum) - 2.0 * Math.log(n) - Math.log(n - 1));
     }
 }

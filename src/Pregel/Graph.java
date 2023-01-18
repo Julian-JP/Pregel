@@ -30,39 +30,6 @@ public class Graph<NV, EV> {
         }
     }
 
-    public Graph(File edgeFile, String separator, int verticesCount, NV defaultVertexValue, EV defaultEdgeValue, boolean addOppositeEdges) throws IOException {
-        this.nodes = new ExtendedNode[verticesCount];
-
-        HashMap<Integer, Integer> mapping = new HashMap<>(verticesCount);
-        int maxKey = 0;
-
-        BufferedReader reader;
-        reader = new BufferedReader(new FileReader(edgeFile));
-        String line;
-        while ((line = reader.readLine()) != null) {
-            String[] split = line.split(separator);
-            Integer fromTmp = Integer.valueOf(split[0]);
-            Integer toTmp = Integer.valueOf(split[1]);
-
-            Integer from = mapping.putIfAbsent(fromTmp, maxKey);
-            if (from == null) {
-                from = maxKey;
-                this.nodes[from] = new ExtendedNode<NV, EV>(new Node<>(defaultVertexValue, maxKey++));
-            }
-            Integer to = mapping.putIfAbsent(toTmp, maxKey);
-            if (to == null) {
-                to = maxKey;
-                this.nodes[to] = new ExtendedNode<NV, EV>(new Node<>(defaultVertexValue, maxKey++));
-            }
-
-            this.nodes[from].addEdge(new Edge<>(defaultEdgeValue, from, to), this.nodes[to]);
-
-            if (addOppositeEdges) {
-                this.nodes[to].addEdge(new Edge<>(defaultEdgeValue, to, from), this.nodes[from]);
-            }
-        }
-    }
-
     public static Graph<Integer, Boolean> computeSimpleGraph(File edgeFile, String separator, int verticesCount, boolean addOppositeEdges) throws IOException {
         ExtendedNode<Integer, Boolean>[] nodes = new ExtendedNode[verticesCount];
 

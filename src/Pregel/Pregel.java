@@ -16,17 +16,15 @@ public class Pregel {
     public static <NV, EV, M> Graph<NV, EV> apply(Graph<NV, EV> graph, int maxSuperSteps, BiFunction<NV, List<M>, NV> vertexFunction, Function<EdgeTriplet<NV, EV>, M> sendMsg, Consumer<Stream<Node<NV>>> analysis) {
 
         long startTime = System.currentTimeMillis();
-        long countMessages = 0;
         List<ExtendedNode<NV, EV>> activeNodes = graph.toExtendedNodeStream().collect(Collectors.toList());
         HashSet<ExtendedNode<NV, EV>> inactiveNodes = new HashSet<>();
 
         for (int i = 0; i < maxSuperSteps; i++) {
-            System.out.println(activeNodes.size());
             if (i % 5 == 0) {
                 analysis.accept(graph.toNodeStream());
             }
 
-            System.out.println("SuperStep " + i + " started");
+            System.out.println("Pregel: SuperStep " + i + " started");
 
             HashMap<ExtendedNode<NV, EV>, List<M>> messages = new HashMap<>();
             List<ExtendedNode<NV, EV>> activeNodesNew = new ArrayList<>(activeNodes.size());
@@ -41,8 +39,6 @@ public class Pregel {
 
                     M message = sendMsg.apply(new EdgeTriplet<NV, EV>(from, to, edge));
                     if (message == null) continue;
-
-                    countMessages++;
 
                     if (!messages.containsKey(to)) {
                         messages.put(to, new ArrayList<>());
@@ -71,7 +67,7 @@ public class Pregel {
         }
 
         long timeElapsed = System.currentTimeMillis() - startTime;
-        System.out.println("Pregel finished with " + countMessages + " messages in " + timeElapsed + "ms");
+        System.out.println("Pregel: Pregel finished in " + timeElapsed + "ms");
         return graph;
     }
 
