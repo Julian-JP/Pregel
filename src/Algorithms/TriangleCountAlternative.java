@@ -1,91 +1,72 @@
 package Algorithms;
 
+import Measurements.Log;
 import Measurements.SpearmanCorrelation;
+import Pregel.EdgeTriplet;
 import Pregel.Graph;
 import Pregel.Pregel;
-import Pregel.EdgeTriplet;
 import Tools.Pair;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public class TriangleCountAlternative {
 
-    public static <NV, EV> long countpply(Graph<NV, EV> graph) {
-        Graph<List<Integer>, Double> triangleGraph = graph.mapTo(x -> new ArrayList<>(), x -> 0.0);
+    public static <NV, EV> long countapply(Graph<NV, EV> graph) {
+        Graph<List<Integer>, Double> triangleGraph = graph.mapTo(x -> new ArrayList<>(), x -> 1.0);
         triangleGraph.removeSelfEdges();
-        Graph<List<Integer>, Double> resTriangle = Pregel.apply(triangleGraph, 2, vertexAlternativeFunctionTriangle, sendMsgAlternativeTriangle);
-
-        return resTriangle.toNodeStream().map(x -> x.getValue()).map(x -> x.size() == 1 ? x.get(0) : 0).reduce(0, Integer::sum) / 3;
+        countapplyInternal(triangleGraph);
+        return triangleGraph.toNodeStream().map(x -> x.getValue()).map(x -> x.size() == 1 ? x.get(0) : 0).reduce(0, Integer::sum) / 3;
     }
 
-    private static BiFunction<List<Integer>, List<Integer>, List<Integer>> vertexAlternativeFunctionTriangle = (vertexVal, messages) -> {
-        if (!vertexVal.isEmpty()) {
-            int count = messages.stream().reduce((x,y) -> x +y).get() / 2;
-            ArrayList<Integer> ret = new ArrayList<>(1);
-            ret.add(count);
-            return ret;
-        } else {
-            return messages;
-        }
-    };
-    private static Function<EdgeTriplet<List<Integer>, Double>, Integer> sendMsgAlternativeTriangle = (triplet) -> {
-        if (triplet.srcAttr().isEmpty()) {
-            return triplet.srcId();
-        } else {
-            HashSet<Integer> srcNeighbors = new HashSet<>();
-            int count = 0;
+    public static <NV, EV> Log error(Graph<NV, EV> graph1, Graph<NV, EV> graph2) {
+        Graph<List<Integer>, Double> triangleGraph1 = graph1.mapTo(x -> new ArrayList<>(), x -> 1.0);
+        triangleGraph1.removeSelfEdges();
+        Graph<List<Integer>, Double> triangleGraph2 = graph2.mapTo(x -> new ArrayList<>(), x -> 1.0);
+        triangleGraph2.removeSelfEdges();
+        long msg1 = countapplyInternal(triangleGraph1);
+        long msg2 = countapplyInternal(triangleGraph2);
 
-            for (int i = 0; i < triplet.srcAttr().size(); i++) {
-                srcNeighbors.add(triplet.srcAttr().get(i));
-            }
-            for (int i = 0; i < triplet.dstAttr().size(); i++) {
-                if (srcNeighbors.contains(triplet.dstAttr().get(i))) count++;
-            }
-            return count;
-        }
-    };
+        double error = SpearmanCorrelation.compare(triangleGraph1.toNodeStream().map(x-> x.getValue().size() == 1 ? new Pair<>(x.getValue().get(0), x.getId()) : new Pair<>(0, x.getId())).sorted(Comparator.comparingInt(Pair::first)).map(Pair::second).toList(),
+                triangleGraph2.toNodeStream().map(x-> x.getValue().size() == 1 ? new Pair<>(x.getValue().get(0), x.getId()) : new Pair<>(0, x.getId())).sorted(Comparator.comparingInt(Pair::first)).map(Pair::second).toList());
 
-    public static <NV, EV> double error(Graph<NV, EV> graph1, Graph<NV, EV> graph2) {
-        BiFunction<Pair<List<Integer>, NV>, List<Integer>, Pair<List<Integer>, NV>> vertexFunctionTriangle = (vertexVal, messages) -> {
-            if (!vertexVal.first().isEmpty()) {
-                int count = messages.stream().reduce((x,y) -> x +y).get() / 2;
+        return new Log(error, msg1, msg2, "");
+    }
+
+    private static long countapplyInternal(Graph<List<Integer>, Double> graph) {
+        AtomicLong messageCount = new AtomicLong(0);
+        BiFunction<List<Integer>, List<Integer>, List<Integer>> vertexFunction = (vertexVal, messages) -> {
+            if (!vertexVal.isEmpty()) {
+                int count = messages.stream().reduce(Integer::sum).get() / 2;
                 ArrayList<Integer> ret = new ArrayList<>(1);
                 ret.add(count);
-                return new Pair<>(ret, vertexVal.second());
+                return ret;
             } else {
-                return new Pair<>(messages, vertexVal.second());
+                return messages;
             }
         };
-        Function<EdgeTriplet<Pair<List<Integer>, NV>, EV>, Integer> sendMsgTriangle = (triplet) -> {
-            if (triplet.srcAttr().first().isEmpty()) {
+        Function<EdgeTriplet<List<Integer>, Double>, Integer> sendMsg = (triplet) -> {
+            messageCount.incrementAndGet();
+            if (triplet.srcAttr().isEmpty()) {
                 return triplet.srcId();
             } else {
                 HashSet<Integer> srcNeighbors = new HashSet<>();
                 int count = 0;
 
-                for (int i = 0; i < triplet.srcAttr().first().size(); i++) {
-                    srcNeighbors.add(triplet.srcAttr().first().get(i));
-                }
-                for (int i = 0; i < triplet.dstAttr().first().size(); i++) {
-                    if (srcNeighbors.contains(triplet.dstAttr().first().get(i))) count++;
+                srcNeighbors.addAll(triplet.srcAttr());
+                for (int i = 0; i < triplet.dstAttr().size(); i++) {
+                    if (srcNeighbors.contains(triplet.dstAttr().get(i))) count++;
                 }
                 return count;
             }
         };
+        Pregel.apply(graph, 2, vertexFunction, sendMsg);
 
-
-
-        Graph<Pair<List<Integer>, NV>, EV> triangleGraph1 = graph1.mapTo(x -> new Pair<List<Integer>, NV>(new ArrayList<>(), x), x -> x);
-        triangleGraph1.removeSelfEdges();
-        Graph<Pair<List<Integer>, NV>, EV> triangleGraph2 = graph2.mapTo(x -> new Pair<List<Integer>, NV>(new ArrayList<>(), x), x -> x);
-        triangleGraph2.removeSelfEdges();
-        Graph<Pair<List<Integer>, NV>, EV> resTriangle1 = Pregel.apply(triangleGraph1, 2, vertexFunctionTriangle, sendMsgTriangle);
-        Graph<Pair<List<Integer>, NV>, EV> resTriangle2 = Pregel.apply(triangleGraph2, 2, vertexFunctionTriangle, sendMsgTriangle);
-
-        return SpearmanCorrelation.compare(resTriangle1.toNodeStream().sorted(Comparator.comparingInt(x -> x.getValue().first().size())).map(x -> x.getValue().second()).toList(),
-                resTriangle2.toNodeStream().sorted(Comparator.comparingInt(x -> x.getValue().first().size())).map(x -> x.getValue().second()).toList());
+        return messageCount.get();
     }
 }

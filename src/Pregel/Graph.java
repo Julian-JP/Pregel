@@ -105,6 +105,8 @@ public class Graph<NV, EV> {
     public Graph<NV, EV> sampleEdgesBidirectional(double s) {
         double dAVG = toEdgeStream().count() / (double) nodes.length;
 
+        long edgeCount = toEdgeStream().count();
+
         for (ExtendedNode<NV, EV> node : nodes) {
             for (int j = 0; j < node.getNeighbors().size(); j++) {
                 final ExtendedNode<NV, EV> from = node;
@@ -127,6 +129,8 @@ public class Graph<NV, EV> {
                 }
             }
         }
+
+        System.out.println("Edgesampling: Before " + edgeCount + " edges now " + toEdgeStream().count() + " edges!");
         return this;
     }
 }

@@ -15,7 +15,6 @@ import java.util.stream.Stream;
 public class Pregel {
     public static <NV, EV, M> Graph<NV, EV> apply(Graph<NV, EV> graph, int maxSuperSteps, BiFunction<NV, List<M>, NV> vertexFunction, Function<EdgeTriplet<NV, EV>, M> sendMsg, Consumer<Stream<Node<NV>>> analysis) {
 
-        long startTime = System.currentTimeMillis();
         List<ExtendedNode<NV, EV>> activeNodes = graph.toExtendedNodeStream().collect(Collectors.toList());
         HashSet<ExtendedNode<NV, EV>> inactiveNodes = new HashSet<>();
 
@@ -23,8 +22,6 @@ public class Pregel {
             if (i % 5 == 0) {
                 analysis.accept(graph.toNodeStream());
             }
-
-            System.out.println("Pregel: SuperStep " + i + " started");
 
             HashMap<ExtendedNode<NV, EV>, List<M>> messages = new HashMap<>();
             List<ExtendedNode<NV, EV>> activeNodesNew = new ArrayList<>(activeNodes.size());
@@ -65,9 +62,6 @@ public class Pregel {
                 x.setValue(vertexFunction.apply(x.getValue(), messages.get(x)));
             }).collect(Collectors.toList());
         }
-
-        long timeElapsed = System.currentTimeMillis() - startTime;
-        System.out.println("Pregel: Pregel finished in " + timeElapsed + "ms");
         return graph;
     }
 

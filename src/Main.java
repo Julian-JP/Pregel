@@ -1,6 +1,8 @@
 import Algorithms.PageRank;
 import Algorithms.TriangleCount;
 import Algorithms.TriangleCountAlternative;
+import Evaluation.PagerankEvaluation;
+import Evaluation.TriangleCountEvaluation;
 import Measurements.SpearmanCorrelation;
 import Pregel.Edge;
 import Pregel.Graph;
@@ -103,22 +105,21 @@ public class Main {
 //            triangleGraph8 = Graph.computeSimpleGraph(astroPh, "\t", maxAstroPh, addOppositeAstroPh);
 //            triangleGraph9 = Graph.computeSimpleGraph(astroPh, "\t", maxAstroPh, addOppositeAstroPh);
 //            triangleGraph10 = Graph.computeSimpleGraph(astroPh, "\t", maxAstroPh, addOppositeAstroPh);
-            pagerankGraph1 = Graph.computeSimpleGraph(roadNWCA, "\t", maxRoadNWCA, addOppositeRoadNWCA);
-            pagerankGraph2 = Graph.computeSimpleGraph(roadNWCA, "\t", maxRoadNWCA, addOppositeRoadNWCA);
+//            pagerankGraph1 = Graph.computeSimpleGraph(roadNWCA, "\t", maxRoadNWCA, addOppositeRoadNWCA);
+//            pagerankGraph2 = Graph.computeSimpleGraph(roadNWCA, "\t", maxRoadNWCA, addOppositeRoadNWCA);
 
 //            pagerankTwitch = Graph.computeSimpleGraph(twitch, ",", maxTwitch, addOppositeTwitch);
 //            pagerankTwitch2 = Graph.computeSimpleGraph(twitch, ",", maxTwitch, addOppositeTwitch);
+
+            PagerankEvaluation.eval();
+           TriangleCountEvaluation.eval();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-        System.out.println(TriangleCountAlternative.error(pagerankGraph1.sampleEdgesBidirectional(0.01), pagerankGraph2));
-
 
         //System.out.println(PageRank.error(pagerankTwitch, 0, 0, pagerankTwitch2, 3, 20));
 //        System.out.println(PageRank.error(pagerankTwitch, 50, pagerankTwitch2, 2, 30));
-
-//        System.out.println("0.50: " + TriangleCount.error(triangleGraph1.sampleEdgesBidirectional(0.5), triangleGraph2));
 //        System.out.println("0.45: " + TriangleCount.error(triangleGraph3.sampleEdgesBidirectional(0.45), triangleGraph2));
 //        System.out.println("0.40: " + TriangleCount.error(triangleGraph4.sampleEdgesBidirectional(0.4), triangleGraph2));
 //        System.out.println("0.35: " + TriangleCount.error(triangleGraph5.sampleEdgesBidirectional(0.35), triangleGraph2));
