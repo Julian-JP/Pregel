@@ -1,5 +1,7 @@
 package Pregel;
 
+import Tools.Pair;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,6 +32,14 @@ public class Graph<NV, EV> {
         }
     }
 
+    /**
+     * Generate a graph with Integer as vertex values and boolean (true) for every edge
+     * @param edgeFile File of the stored graph
+     * @param separator Separating character in the file
+     * @param verticesCount Number of vertices in the Graph
+     * @param addOppositeEdges Should we add for every edge x->y also the opposite edge y->x?
+     * @return The full graph
+     */
     public static Graph<Integer, Boolean> computeSimpleGraph(File edgeFile, String separator, int verticesCount, boolean addOppositeEdges) throws IOException {
         ExtendedNode<Integer, Boolean>[] nodes = new ExtendedNode[verticesCount];
 
@@ -68,10 +78,18 @@ public class Graph<NV, EV> {
         this.nodes = nodes;
     }
 
+    /**
+     * Get all Edges of the graph as a stream
+     * @return Stream of all the edges
+     */
     public Stream<EdgeTriplet<NV, EV>> toEdgeStream() {
         return Arrays.stream(nodes).flatMap(lst -> lst.getNeighbors().stream().map(ec -> new EdgeTriplet<NV, EV>(lst, ec.to, ec.edge)));
     }
 
+    /**
+     * Get all Vertices of the graph as a stream
+     * @return Stream of all the vertices
+     */
     public Stream<Node<NV>> toNodeStream() {
         return Arrays.stream(nodes).map(extNode -> extNode.node);
     }
@@ -101,11 +119,16 @@ public class Graph<NV, EV> {
         }
     }
 
-    //For undirected graphs where every edge is 2times in edges (one for each direction)
+    /**
+     * Sample the graph by using the proposed sparsifier in Bridging the GAP
+     * @param s Sparsification parameter s
+     * @return Sampled graph
+     */
     public Graph<NV, EV> sampleEdgesBidirectional(double s) {
         double dAVG = toEdgeStream().count() / (double) nodes.length;
 
         long edgeCount = toEdgeStream().count();
+        ArrayList<Pair<ExtendedNode<NV,EV>, ExtendedNode<NV, EV>>> removeEdges = new ArrayList<>();
 
         for (ExtendedNode<NV, EV> node : nodes) {
             for (int j = 0; j < node.getNeighbors().size(); j++) {
@@ -126,11 +149,40 @@ public class Graph<NV, EV> {
                     }
                     from.getNeighbors().remove(j);
                     j--;
+                    removeEdges.add(new Pair<>(from, to));
                 }
             }
         }
 
-        System.out.println("Edgesampling: Before " + edgeCount + " edges now " + toEdgeStream().count() + " edges!");
+        //System.out.println("Edge-sampling: Before " + edgeCount + " edges now " + toEdgeStream().count() + " edges!");
+        return this;
+    }
+
+    /**
+     * Sample the graph with just random edge sampling
+     * @param s Sparsificaton parameter s (probability of keeping an edge in the graph
+     * @return Sampled graph
+     */
+    public Graph<NV, EV> sampleEdgesRandomBidirectional(double s) {
+        for (ExtendedNode<NV, EV> node : nodes) {
+            for (int j = 0; j < node.getNeighbors().size(); j++) {
+                final ExtendedNode<NV, EV> from = node;
+                final ExtendedNode<NV, EV> to = node.getNeighbors().get(j).to;
+
+                //Prevents edges from been tested twice since for undirected graph every edge
+                //is twice in the graph: one time for x->y one time for y->x
+                if (from.hashCode() < to.hashCode()) continue;
+
+                if (Math.random() > s) {
+                    //In the case of x->x we just need to remove one edge
+                    if (from != to) {
+                        to.getNeighbors().removeIf(x -> x.to == from);
+                    }
+                    from.getNeighbors().remove(j);
+                    j--;
+                }
+            }
+        }
         return this;
     }
 }

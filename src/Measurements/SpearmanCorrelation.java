@@ -1,7 +1,6 @@
 package Measurements;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.List;
@@ -32,10 +31,6 @@ public class SpearmanCorrelation {
         BigDecimal denom = n.multiply(n.pow(2).subtract(BigDecimal.valueOf(1)));
 
         BigDecimal fraction = (BigDecimal.valueOf(6).multiply(sum)).divide(denom, 8, RoundingMode.HALF_UP);
-
-        if (fraction.compareTo(BigDecimal.valueOf(1)) > 0) {
-            return BigDecimal.valueOf(1).subtract(fraction).abs().doubleValue();
-        }
-        return fraction.doubleValue();
+        return fraction.divide(BigDecimal.valueOf(2), 8, RoundingMode.HALF_UP).doubleValue();
     }
 }

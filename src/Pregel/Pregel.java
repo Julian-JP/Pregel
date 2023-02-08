@@ -1,7 +1,5 @@
 package Pregel;
 
-import Tools.Pair;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -13,7 +11,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Pregel {
-    public static <NV, EV, M> Graph<NV, EV> apply(Graph<NV, EV> graph, int maxSuperSteps, BiFunction<NV, List<M>, NV> vertexFunction, Function<EdgeTriplet<NV, EV>, M> sendMsg, Consumer<Stream<Node<NV>>> analysis) {
+    public static <NV, EV, M> Graph<NV, EV> apply(Graph<NV, EV> graph, int maxSuperSteps, BiFunction<ExtendedNode<NV, EV>, List<M>, NV> vertexFunction, Function<EdgeTriplet<NV, EV>, M> sendMsg, Consumer<Stream<Node<NV>>> analysis) {
 
         List<ExtendedNode<NV, EV>> activeNodes = graph.toExtendedNodeStream().collect(Collectors.toList());
         HashSet<ExtendedNode<NV, EV>> inactiveNodes = new HashSet<>();
@@ -58,16 +56,12 @@ public class Pregel {
             activeNodes = activeNodesNew;
             if (activeNodes.isEmpty()) break;
 
-            activeNodes = activeNodes.stream().parallel().peek(x -> {
-                x.setValue(vertexFunction.apply(x.getValue(), messages.get(x)));
-            }).collect(Collectors.toList());
+            activeNodes = activeNodes.stream().parallel().peek(x -> x.setValue(vertexFunction.apply(x, messages.get(x)))).collect(Collectors.toList());
         }
         return graph;
     }
 
-    public static <NV, EV, M> Graph<NV, EV> apply(Graph<NV, EV> graph, int maxSuperSteps, BiFunction<NV, List<M>, NV> vertexFunction, Function<EdgeTriplet<NV, EV>, M> sendMsg) {
-        return apply(graph, maxSuperSteps, vertexFunction, sendMsg, x -> {
-            return;
-        });
+    public static <NV, EV, M> Graph<NV, EV> apply(Graph<NV, EV> graph, int maxSuperSteps, BiFunction<ExtendedNode<NV, EV>, List<M>, NV> vertexFunction, Function<EdgeTriplet<NV, EV>, M> sendMsg) {
+        return apply(graph, maxSuperSteps, vertexFunction, sendMsg, x -> {});
     }
 }
